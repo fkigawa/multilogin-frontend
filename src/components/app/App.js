@@ -1,80 +1,167 @@
 import React, { Component } from 'react';
-
-import './App.css';
+import Login from "../login/login.js"
+import Register from '../login/register.js';
+import Dashboard from '../dashboard/dashboard.js';
+import axios from 'axios';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  withRouter
+} from "react-router-dom";
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: '',
-      password: '',
-      responseToLogin: '',
-    };
+
+  state = {
+    userId: '',
+    login: true,
+    loggedIn: false,
+    register: false,
+    email: '',
+    password: '',
+    confirmPassword: '',
+    incorrect: false
   }
 
+  async componentDidMount () {
+    const token = !(localStorage.getItem('token') === null);
+    const userToken = token ? localStorage.getItem('token') : '';
+    console.log(userToken)
 
-  componentDidMount() {
+
+    let result = await axios.get('http://localhost:8000/api/users/current', {
+      headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Authorization": "Token " + userToken
+      },
+      credentials: "include",
+    });
+
+    if (result.status == 200) {
+      this.props.history.push("dashboard");
+      this.setState({ userId: userToken });
+    }
+
+
   }
 
-  handleSubmit = async e => {
-    e.preventDefault();
-    console.log('here', this.state.email, this.state.password)
-    const response = await fetch('/api/users/login', {
+  handleChange = (event) => {
+    this.setState({[event.target.name]: event.target.value});
+  }
+
+  onCancelClick = () => {
+    this.props.history.replace("");
+
+    this.setState({
+      register: !this.state.register,
+      login: !this.state.login
+    })
+  }
+
+  onRegisterClick = () => {
+    this.props.history.push("register");
+
+    this.setState({
+      register: !this.state.register,
+      login: !this.state.login,
+      incorrect: false
+    })
+  }
+
+  onLogout = () => {
+    console.log('here')
+    localStorage.removeItem('token');
+    this.props.history.replace("");
+  }
+
+  handleLogin = async (event) => {
+    console.log('in handlelogin', this.state.email, this.state.password)
+    await axios.post('http://localhost:8000/api/users/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
+      user: {
+        email: this.state.email,
+        password: this.state.password
+      }
+    })
+    .then( (resp) => {
+      if (resp.data.success) {
+        this.props.history.push("dashboard");
+        console.log('after history')
+        localStorage.setItem('token', resp.data.userId);
+        this.setState({
+          userId: resp.data.userId,
+          login: false,
+          register: false,
+          loggedIn: true,
+          incorrect: false
+        })
+      }
+      else {
+        this.setState({
+          incorrect: true
+        })
+        console.log('error');
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    })
+
+    console.log('after after history', this.state.userId)
+  };
+
+  handleRegister = async (event) => {
+    console.log('in handle register', this.state.email, this.state.password)
+    let user = this.state.email;
+    let pass = this.state.password;
+    if(pass === this.state.confirmPassword) {
+      await axios.post('http://localhost:8000/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         user: {
           email: this.state.email,
           password: this.state.password
         }
-      }),
-    });
-    const body = await response.json();
-    console.log(body.resp)
+      })
+      .then( resp => {
+        this.props.history.replace("");
+        this.setState({
+          loggedIn: true,
+          register: false,
+          login: false
+        });
+      })
+      .catch(function (error) {
+        console.log(error);
+      })
+    }
+  }
 
-    this.setState({ responseToLogin: body.resp });
-  };
 
-render() {
+  render() {
     return (
 
-      <div id="wrapper">
-      <div id="box">
-        <div id="top_header">
-          <h3>Company Processor</h3>
-          <h5>
-            Sign in to continue to your<br />
-            dashboard
-          </h5>
-        </div>
-        <div id="inputs">
-            <form onSubmit={this.handleSubmit}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={this.state.email}
-                onChange={e => this.setState({ email: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={this.state.password}
-                onChange={e => this.setState({ password: e.target.value })}
-              />
-              <input type="submit" value="Sign in"/>
-            </form>
-        </div>
-        <div id="bottom">
-          <a href="#">Create an account</a>
-          <a class="right_a" href="#">Forgot password?</a>
-        </div>
-      </div>
-      </div>
+      <Switch>
+        <Route exact path='/' render={routeProps => <Login {...routeProps} incorrect={this.state.incorrect} handleChange={this.handleChange} handleLogin={this.handleLogin} onRegisterClick={this.onRegisterClick} />}/>
+        <Route exact path="/dashboard" render={routeProps => <Dashboard {...routeProps}  userId={this.state.userId} onLogout={this.onLogout} />}/>
+        <Route exact path="/register" render={routeProps => <Register {...routeProps}  incorrect={this.state.incorrect} handleChange={this.handleChange} handleRegister={this.handleRegister} onCancelClick={this.onCancelClick} />}/>
+      </Switch>
+
 
     );
   }
 }
 
-export default App;
+// <div className="App">
+// {this.state.login ? <Login handleChange={this.handleChange} handleLogin={this.handleLogin} onRegisterClick={this.onRegisterClick} /> : null}
+// {this.state.register ? <Register handleChange={this.handleChange} handleRegister={this.handleRegister} /> : null}
+// {this.state.loggedIn ? <Dashboard userId={this.state.userId} /> : null}
+// </div>
+
+export default withRouter(App);

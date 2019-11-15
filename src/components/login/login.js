@@ -1,80 +1,157 @@
-import React, { Component } from 'react';
+import React from 'react';
+import Avatar from '@material-ui/core/Avatar';
+import Button from '@material-ui/core/Button';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import TextField from '@material-ui/core/TextField';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
+import Link from '@material-ui/core/Link';
+import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/core/styles';
+import Container from '@material-ui/core/Container';
 
-import './App.css';
-
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: '',
-      password: '',
-      responseToLogin: '',
-    };
-  }
-
-
-  componentDidMount() {
-  }
-
-  handleSubmit = async e => {
-    e.preventDefault();
-    console.log('here', this.state.email, this.state.password)
-    const response = await fetch('/api/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user: {
-          email: this.state.email,
-          password: this.state.password
-        }
-      }),
-    });
-    const body = await response.json();
-    console.log(body.resp)
-
-    this.setState({ responseToLogin: body.resp });
-  };
-
-render() {
-    return (
-
-      <div id="wrapper">
-      <div id="box">
-        <div id="top_header">
-          <h3>Company Processor</h3>
-          <h5>
-            Sign in to continue to your<br />
-            dashboard
-          </h5>
-        </div>
-        <div id="inputs">
-            <form onSubmit={this.handleSubmit}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={this.state.email}
-                onChange={e => this.setState({ email: e.target.value })}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={this.state.password}
-                onChange={e => this.setState({ password: e.target.value })}
-              />
-              <input type="submit" value="Sign in"/>
-            </form>
-        </div>
-        <div id="bottom">
-          <a href="#">Create an account</a>
-          <a class="right_a" href="#">Forgot password?</a>
-        </div>
-      </div>
-      </div>
-
-    );
-  }
+function Copyright() {
+  return (
+    <Typography variant="body2" color="textSecondary" align="center">
+      {'Copyright © '}
+      <Link color="inherit" href="https://material-ui.com/">
+        Processor
+      </Link>{' '}
+      {new Date().getFullYear()}
+      {'.'}
+    </Typography>
+  );
 }
 
-export default App;
+const useStyles = makeStyles(theme => ({
+  '@global': {
+    body: {
+      backgroundColor: theme.palette.common.white,
+    },
+  },
+  paper: {
+    marginTop: theme.spacing(8),
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  avatar: {
+    margin: theme.spacing(1),
+    backgroundColor: theme.palette.secondary.main,
+  },
+  form: {
+    width: '100%', // Fix IE 11 issue.
+    marginTop: theme.spacing(1),
+  },
+  submit: {
+    margin: theme.spacing(3, 0, 2),
+  },
+}));
+
+// export default class Login extends Component {
+export default function Login(props) {
+  const classes = useStyles();
+
+  return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <div className={classes.paper}>
+        <Avatar className={classes.avatar}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
+        <form className={classes.form} noValidate>
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            onChange = {props.handleChange}
+          />
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            onChange = {props.handleChange}
+          />
+          <FormControlLabel
+            control={<Checkbox value="remember" color="primary" />}
+            label="Remember me"
+          />
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            className={classes.submit}
+            onClick={props.handleLogin}
+          >
+            Sign In
+          </Button>
+          <Grid container>
+            <Grid item xs>
+              <Link href="#" variant="body2">
+                Forgot password?
+              </Link>
+            </Grid>
+            <Grid item>
+              <Link onClick={props.onRegisterClick} variant="body2">
+                {"Don't have an account? Sign Up"}
+              </Link>
+            </Grid>
+          </Grid>
+        </form>
+      </div>
+      <Box mt={8}>
+        <Copyright />
+      </Box>
+    </Container>
+  );
+}
+
+// export default Login;
+
+
+
+// import React, {Component} from 'react';
+// import Auxiliary from '../auxiliary';
+// import { Container,Button,Form, Input} from 'semantic-ui-react'
+//
+//
+// class Login extends Component {
+//
+//   render(){
+//     return (
+//       <div className = "Login">
+//         <Container style={{display:'block',width:'400px', marginTop:"200px", justifyContent:'center', alignItems:'center', height:'500px'}}>
+//         <h2 style={{display:'flex', justifyContent:'center'}}> Company Processor </h2>
+//         { this.props.incorrect ? <p>Your login credentials could not be verified, please try again.</p> : null }
+//         <Input  style={{display:'flex', padding:'10px'}} placeholder="Enter Email" name="email" onChange = {this.props.handleChange}></Input>
+//         <Input  style={{display:'flex', padding:'10px'}} placeholder="Enter Password" type="password" name="password" onChange = {this.props.handleChange}></Input>
+//         <br/>
+//           <div style={{display:'flex', justifyContent:'center'}}>
+//           <Button style={{width:'190px'}}  basic color='olive' onClick={this.props.handleLogin}>Login</Button>
+//           <Button style={{width:'190px'}} basic color='teal' onClick={this.props.onRegisterClick}>Register</Button>
+//           </div>
+//         </Container>
+//     </div>
+//   )
+// }
+// }
+//
+//
