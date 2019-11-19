@@ -12,8 +12,7 @@ import {
 class Dashboard extends React.Component {
 
    render() {
-     console.log(this.props)
-     return this.props.token ?
+     return this.props.user.token ?
         <Router>
           <div>
             <nav>
@@ -30,8 +29,6 @@ class Dashboard extends React.Component {
               </ul>
             </nav>
 
-            {/* A <Switch> looks through its children <Route>s and
-                renders the first one that matches the current URL. */}
             <Switch>
               <Route path="/about">
                 <About />

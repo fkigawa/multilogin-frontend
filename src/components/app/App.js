@@ -13,6 +13,7 @@ import {
   Link,
   withRouter
 } from "react-router-dom";
+import Cookies from 'js-cookie';
 
 class App extends Component {
 
@@ -20,15 +21,16 @@ class App extends Component {
     token: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    user: {}
   }
 
   /*
   Checks to see if token is present for persistence purposes.
   */
   async componentDidMount () {
-    const token = !(localStorage.getItem('token') === null);
-    const userToken = token ? localStorage.getItem('token') : '';
+    const token = !(Cookies.get('token') === null);
+    const userToken = token ? Cookies.get('token') : '';
 
     let result = await axios.get('http://localhost:8000/api/auth/users/current', {
       headers: {
@@ -40,7 +42,9 @@ class App extends Component {
 
     if (result.status == 200) {
       this.props.history.push("dashboard");
-      this.setState({ token: userToken });
+      this.setState({
+        user: result.data.user
+      });
     }
   }
 
@@ -57,7 +61,7 @@ class App extends Component {
   }
 
   onLogout = () => {
-    localStorage.removeItem('token');
+    Cookies.remove('token');
     this.props.history.replace("");
   }
 
@@ -76,12 +80,12 @@ class App extends Component {
         password: this.state.password
       }
     })
-    .then((resp) => {
-      if (resp.data.success) {
+    .then((res) => {
+      if (res.data.auth == 'success') {
         this.props.history.push("dashboard");
-        localStorage.setItem('token', resp.data.userId);
+        Cookies.set('token', res.data.user.token, { expires: 1 });
         this.setState({
-          token: resp.data.userId
+          user: res.data.user
         })
       }
     })
@@ -108,7 +112,7 @@ class App extends Component {
           password: this.state.password
         }
       })
-      .then((resp) => {
+      .then((res) => {
         this.props.history.replace("");
       })
       .catch(function (error) {
@@ -124,17 +128,11 @@ class App extends Component {
     return (
       <Switch>
         <Route exact path='/' render={routeProps => <Login {...routeProps} handleChange={this.handleChange} handleLogin={this.handleLogin} onRegisterClick={this.onRegisterClick} />}/>
-        <Route exact path="/dashboard" render={routeProps => <Dashboard {...routeProps}  token={this.state.token} onLogout={this.onLogout} />}/>
+        <Route exact path="/dashboard" render={routeProps => <Dashboard {...routeProps}  user={this.state.user} onLogout={this.onLogout} />}/>
         <Route exact path="/register" render={routeProps => <Register {...routeProps} handleChange={this.handleChange} handleRegister={this.handleRegister} onCancelClick={this.onCancelClick} />}/>
       </Switch>
     );
   }
 }
-
-// <div className="App">
-// {this.state.login ? <Login handleChange={this.handleChange} handleLogin={this.handleLogin} onRegisterClick={this.onRegisterClick} /> : null}
-// {this.state.register ? <Register handleChange={this.handleChange} handleRegister={this.handleRegister} /> : null}
-// {this.state.loggedIn ? <Dashboard userId={this.state.userId} /> : null}
-// </div>
 
 export default withRouter(App);
