@@ -1,3 +1,6 @@
+/*
+App component. All interfaces are initialized here.
+*/
 import React, { Component } from 'react';
 import Login from "../login/login.js"
 import Register from '../login/register.js';
@@ -14,23 +17,20 @@ import {
 class App extends Component {
 
   state = {
-    userId: '',
-    login: true,
-    loggedIn: false,
-    register: false,
+    token: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    incorrect: false
+    confirmPassword: ''
   }
 
+  /*
+  Checks to see if token is present for persistence purposes.
+  */
   async componentDidMount () {
     const token = !(localStorage.getItem('token') === null);
     const userToken = token ? localStorage.getItem('token') : '';
-    console.log(userToken)
 
-
-    let result = await axios.get('http://localhost:8000/api/users/current', {
+    let result = await axios.get('http://localhost:8000/api/auth/users/current', {
       headers: {
           "Content-Type": "application/json; charset=utf-8",
           "Authorization": "Token " + userToken
@@ -40,10 +40,8 @@ class App extends Component {
 
     if (result.status == 200) {
       this.props.history.push("dashboard");
-      this.setState({ userId: userToken });
+      this.setState({ token: userToken });
     }
-
-
   }
 
   handleChange = (event) => {
@@ -52,32 +50,23 @@ class App extends Component {
 
   onCancelClick = () => {
     this.props.history.replace("");
-
-    this.setState({
-      register: !this.state.register,
-      login: !this.state.login
-    })
   }
 
   onRegisterClick = () => {
     this.props.history.push("register");
-
-    this.setState({
-      register: !this.state.register,
-      login: !this.state.login,
-      incorrect: false
-    })
   }
 
   onLogout = () => {
-    console.log('here')
     localStorage.removeItem('token');
     this.props.history.replace("");
   }
 
+  /*
+  Handler takes email and password, makes an axios post request to the server to authentication user in the database.
+  Redirects user to dashboard page if successful.
+  */
   handleLogin = async (event) => {
-    console.log('in handlelogin', this.state.email, this.state.password)
-    await axios.post('http://localhost:8000/api/users/login', {
+    await axios.post('http://localhost:8000/api/auth/users/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,39 +76,29 @@ class App extends Component {
         password: this.state.password
       }
     })
-    .then( (resp) => {
+    .then((resp) => {
       if (resp.data.success) {
         this.props.history.push("dashboard");
-        console.log('after history')
         localStorage.setItem('token', resp.data.userId);
         this.setState({
-          userId: resp.data.userId,
-          login: false,
-          register: false,
-          loggedIn: true,
-          incorrect: false
+          token: resp.data.userId
         })
-      }
-      else {
-        this.setState({
-          incorrect: true
-        })
-        console.log('error');
       }
     })
     .catch(function (error) {
       console.log(error);
     })
-
-    console.log('after after history', this.state.userId)
   };
 
+  /*
+  Handler takes email and password, makes an axios post request to the server to create a new user in the database.
+  Redirects user back to login page.
+  */
   handleRegister = async (event) => {
-    console.log('in handle register', this.state.email, this.state.password)
     let user = this.state.email;
     let pass = this.state.password;
-    if(pass === this.state.confirmPassword) {
-      await axios.post('http://localhost:8000/api/users/register', {
+    if (pass === this.state.confirmPassword) {
+      await axios.post('http://localhost:8000/api/auth/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,13 +108,8 @@ class App extends Component {
           password: this.state.password
         }
       })
-      .then( resp => {
+      .then((resp) => {
         this.props.history.replace("");
-        this.setState({
-          loggedIn: true,
-          register: false,
-          login: false
-        });
       })
       .catch(function (error) {
         console.log(error);
@@ -143,17 +117,16 @@ class App extends Component {
     }
   }
 
-
+  /*
+    When the App component is rendered, depending on the path of the url, different Child components will be rendered.
+  */
   render() {
     return (
-
       <Switch>
-        <Route exact path='/' render={routeProps => <Login {...routeProps} incorrect={this.state.incorrect} handleChange={this.handleChange} handleLogin={this.handleLogin} onRegisterClick={this.onRegisterClick} />}/>
-        <Route exact path="/dashboard" render={routeProps => <Dashboard {...routeProps}  userId={this.state.userId} onLogout={this.onLogout} />}/>
-        <Route exact path="/register" render={routeProps => <Register {...routeProps}  incorrect={this.state.incorrect} handleChange={this.handleChange} handleRegister={this.handleRegister} onCancelClick={this.onCancelClick} />}/>
+        <Route exact path='/' render={routeProps => <Login {...routeProps} handleChange={this.handleChange} handleLogin={this.handleLogin} onRegisterClick={this.onRegisterClick} />}/>
+        <Route exact path="/dashboard" render={routeProps => <Dashboard {...routeProps}  token={this.state.token} onLogout={this.onLogout} />}/>
+        <Route exact path="/register" render={routeProps => <Register {...routeProps} handleChange={this.handleChange} handleRegister={this.handleRegister} onCancelClick={this.onCancelClick} />}/>
       </Switch>
-
-
     );
   }
 }

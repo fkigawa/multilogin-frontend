@@ -1,3 +1,6 @@
+/*
+Dashboard component. Leads to different features.
+*/
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -10,7 +13,7 @@ class Dashboard extends React.Component {
 
    render() {
      console.log(this.props)
-     return this.props.userId ?
+     return this.props.token ?
         <Router>
           <div>
             <nav>
