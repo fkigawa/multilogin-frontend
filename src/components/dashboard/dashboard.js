@@ -17,7 +17,7 @@ class Dashboard extends React.Component {
     const key = QueryString.parse(this.props.location.search)._id;
     const valueCheck = !(Cookies.get(key) === null);
     const value = valueCheck ? Cookies.get(key) : "";
-    console.log("userToken", value);
+
     let result = await axios.get(
       "http://localhost:8000/api/auth/users/current",
       {
@@ -28,6 +28,7 @@ class Dashboard extends React.Component {
         credentials: "include",
       }
     );
+
     if (result.status == 200) {
       this.setState({
         user: result.data.user,
@@ -37,8 +38,6 @@ class Dashboard extends React.Component {
         user: this.props?.user,
       });
     }
-
-    console.log(this.state.user);
   }
 
   onLogout = () => {

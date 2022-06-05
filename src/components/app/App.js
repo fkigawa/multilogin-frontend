@@ -61,7 +61,6 @@ class App extends Component {
   };
 
   onLogout = () => {
-    console.log(this.state.user);
     Cookies.remove(this.state.user._id);
     this.props.history.replace("");
   };
