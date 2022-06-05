@@ -1,68 +1,82 @@
 /*
 Dashboard component. Leads to different features.
 */
-import React from "react";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import QueryString from "query-string";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 class Dashboard extends React.Component {
+  state = {
+    token: "",
+    user: {},
+  };
 
-   render() {
-     return this.props.user.token ?
-        <Router>
-          <div>
-            <nav>
-              <ul>
-                <li>
-                  <Link to="/">Home</Link>
-                </li>
-                <li>
-                  <Link to="/about">About</Link>
-                </li>
-                <li>
-                  <Link to="/users">Users</Link>
-                </li>
-              </ul>
-            </nav>
+  async componentDidMount() {
+    const key = QueryString.parse(this.props.location.search)._id;
+    const valueCheck = !(Cookies.get(key) === null);
+    const value = valueCheck ? Cookies.get(key) : "";
+    console.log("userToken", value);
+    let result = await axios.get(
+      "http://localhost:8000/api/auth/users/current",
+      {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: "Token " + value,
+        },
+        credentials: "include",
+      }
+    );
+    if (result.status == 200) {
+      this.setState({
+        user: result.data.user,
+      });
+    } else {
+      this.setState({
+        user: this.props?.user,
+      });
+    }
 
-            <Switch>
-              <Route path="/about">
-                <About />
-              </Route>
-              <Route path="/users">
-                <Users />
-              </Route>
-              <Route path="/">
-                <Home />
-              </Route>
-            </Switch>
-            <input type="submit" value="Logout" onClick={this.props.onLogout}/>
-          </div>
-        </Router>
-        :
+    console.log(this.state.user);
+  }
 
+  onLogout = () => {
+    Cookies.remove(this.state.user._id);
+    this.props.history.replace("");
+  };
+
+  render() {
+    return (
+      this.state.user.token ? this.state.user.token : this.props.user.token
+    ) ? (
+      <Router>
         <div>
-  				<h1>Unauthorized access</h1>
-  				<p>You have to login to access the dashboard</p>
-  				<p><Link to="/">Login!</Link></p>
-			  </div>
-   }
-}
+          <nav>
+            <ul>
+              <li>
+                <div to="/">
+                  {this.state?.user?.email?.toString()
+                    ? this.state?.user?.email?.toString()
+                    : this.props?.user?.email?.toString()}
+                </div>
+              </li>
+            </ul>
+          </nav>
 
-function Home() {
-  return <h2>Home</h2>;
-}
-
-function About() {
-  return <h2>About</h2>;
-}
-
-function Users() {
-  return <h2>Users</h2>;
+          <input type="submit" value="Logout" onClick={this.onLogout} />
+        </div>
+      </Router>
+    ) : (
+      <div>
+        <h1>Unauthorized access</h1>
+        <p>You have to login to access the dashboard</p>
+        <p>
+          <Link to="/">Login!</Link>
+        </p>
+      </div>
+    );
+  }
 }
 
 export default Dashboard;

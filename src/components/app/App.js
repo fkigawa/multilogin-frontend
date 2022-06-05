@@ -28,26 +28,24 @@ class App extends Component {
   Checks to see if token is present for persistence purposes.
   */
   async componentDidMount() {
-    const token = !(Cookies.get("token") === null);
-    const userToken = token ? Cookies.get("token") : "";
-
-    let result = await axios.get(
-      "http://localhost:8000/api/auth/users/current",
-      {
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          Authorization: "Token " + userToken,
-        },
-        credentials: "include",
-      }
-    );
-
-    if (result.status == 200) {
-      this.props.history.push("dashboard");
-      this.setState({
-        user: result.data.user,
-      });
-    }
+    // const token = !(Cookies.get("token") === null);
+    // const userToken = token ? Cookies.get("token") : "";
+    // let result = await axios.get(
+    //   "http://localhost:8000/api/auth/users/current",
+    //   {
+    //     headers: {
+    //       "Content-Type": "application/json; charset=utf-8",
+    //       Authorization: "Token " + userToken,
+    //     },
+    //     credentials: "include",
+    //   }
+    // );
+    // if (result.status == 200) {
+    //   this.props.history.push("dashboard");
+    //   this.setState({
+    //     user: result.data.user,
+    //   });
+    // }
   }
 
   handleChange = (event) => {
@@ -63,7 +61,8 @@ class App extends Component {
   };
 
   onLogout = () => {
-    Cookies.remove("token");
+    console.log(this.state.user);
+    Cookies.remove(this.state.user._id);
     this.props.history.replace("");
   };
 
@@ -85,8 +84,8 @@ class App extends Component {
       })
       .then((res) => {
         if (res.data.auth == "success") {
-          this.props.history.push("dashboard");
-          Cookies.set("token", res.data.user.token, { expires: 1 });
+          this.props.history.push(`/dashboard?_id=${res.data.user._id}`);
+          Cookies.set(res.data.user._id, res.data.user.token, { expires: 1 });
           this.setState({
             user: res.data.user,
           });
@@ -144,7 +143,6 @@ class App extends Component {
           )}
         />
         <Route
-          exact
           path="/dashboard"
           render={(routeProps) => (
             <Dashboard
