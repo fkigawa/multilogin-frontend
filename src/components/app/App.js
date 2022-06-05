@@ -27,26 +27,7 @@ class App extends Component {
   /*
   Checks to see if token is present for persistence purposes.
   */
-  async componentDidMount() {
-    // const token = !(Cookies.get("token") === null);
-    // const userToken = token ? Cookies.get("token") : "";
-    // let result = await axios.get(
-    //   "http://localhost:8000/api/auth/users/current",
-    //   {
-    //     headers: {
-    //       "Content-Type": "application/json; charset=utf-8",
-    //       Authorization: "Token " + userToken,
-    //     },
-    //     credentials: "include",
-    //   }
-    // );
-    // if (result.status == 200) {
-    //   this.props.history.push("dashboard");
-    //   this.setState({
-    //     user: result.data.user,
-    //   });
-    // }
-  }
+  async componentDidMount() {}
 
   handleChange = (event) => {
     this.setState({ [event.target.name]: event.target.value });
@@ -60,10 +41,11 @@ class App extends Component {
     this.props.history.push("register");
   };
 
-  onLogout = () => {
-    Cookies.remove(this.state.user._id);
-    this.props.history.replace("");
-  };
+  // Needed to be moved to dashboard.js directly, because of difference in state
+  // onLogout = () => {
+  //   Cookies.remove(this.state.user._id);
+  //   this.props.history.replace("");
+  // };
 
   /*
   Handler takes email and password, makes an axios post request to the server to authentication user in the database.
@@ -83,7 +65,11 @@ class App extends Component {
       })
       .then((res) => {
         if (res.data.auth == "success") {
-          this.props.history.push(`/dashboard?_id=${res.data.user._id}`);
+          this.props.history.push({
+            pathname: "/dashboard",
+            search: `?_id=${res.data.user._id}`,
+            state: { user: res.data.user },
+          });
           Cookies.set(res.data.user._id, res.data.user.token, { expires: 1 });
           this.setState({
             user: res.data.user,
@@ -146,8 +132,9 @@ class App extends Component {
           render={(routeProps) => (
             <Dashboard
               {...routeProps}
-              user={this.state.user}
-              onLogout={this.onLogout}
+              // ideally would have the user be globally declared and updated
+              // user={this.state.user}
+              // onLogout={this.onLogout}
             />
           )}
         />
